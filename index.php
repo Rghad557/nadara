@@ -1,5 +1,4 @@
 <?php
-
 include 'config.php';
 ?>
 
@@ -9,7 +8,6 @@ include 'config.php';
     <title>Nadara</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        
         .admin-btn {
             border: 1px solid #E8B4B8;
             padding: 5px 15px;
@@ -20,6 +18,13 @@ include 'config.php';
         .admin-btn:hover {
             background-color: #E8B4B8;
             color: white !important;
+        }
+
+        .cookie-msg {
+            text-align: center;
+            color: green;
+            margin-top: 10px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -32,13 +37,20 @@ include 'config.php';
     </div>
 
     <div class="nav-links">
-    <a href="index.php">Home</a>
-    <a href="checkout.php">Shopping Cart 🛒</a>
-    <a href="contact.php">Contact Us 📍</a> 
-    <a href="login.php" class="admin-btn">Admin Login 👤</a>
-</div>
+        <a href="index.php">Home</a>
+        <a href="checkout.php">Shopping Cart 🛒</a>
+        <a href="contact.php">Contact Us 📍</a>
+        <a href="login.php" class="admin-btn">Admin Login 👤</a>
+    </div>
 
 </div>
+
+<!--  عرض الكوكي -->
+<?php
+if(isset($_COOKIE['last_purchase'])){
+    echo "<div class='cookie-msg'>Last purchase: ".$_COOKIE['last_purchase']."</div>";
+}
+?>
 
 <section class="hero">
     <h1>Discover Your Beauty 🌿</h1>
@@ -73,9 +85,9 @@ if ($result) {
         </a>
     </div>
 
-<?php 
+<?php
     }
-} 
+}
 ?>
 
 </div>
