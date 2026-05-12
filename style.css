@@ -1,0 +1,300 @@
+
+:root {
+  --primary: #EFD9DC;
+  --primary-hover: #e6cdd1;
+  --background: #F9F5F3;
+  --text: #333;
+  --white: #fff;
+  --card: #ffffff;
+  --accent: #C8D5B9;
+}
+
+body {
+  margin: 0;
+  font-family: Arial;
+  background: var(--background);
+}
+
+/* LOGO TEXT */
+.logo{
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.logo:hover{
+  opacity: 0.8;
+}
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 50px;
+  background: #f8e4e6;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+
+.navbar a {
+  text-decoration: none;
+  color: var(--text);
+}
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 70px 20px 30px;
+}
+
+.hero h1 {
+  font-size: 42px;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: gray;
+}
+
+/* CATEGORIES */
+.categories {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 20px;
+}
+
+.categories button {
+  background: #f3d6d8;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* PRODUCTS */
+.products {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 25px;
+  padding: 40px;
+}
+
+/* CARD */
+.card {
+  background: var(--white);
+  width: 220px;
+  padding: 15px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card a {
+  text-decoration: none;
+  color: var(--text);
+}
+
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 15px;
+}
+
+.card p {
+  color: #af5f6bed; 
+  font-weight: bold;
+}
+
+/* PRODUCT PAGE */
+.product-container {
+  padding: 40px;
+  display: flex;
+  gap: 40px;
+  align-items: center;
+}
+
+.product-img {
+  width: 300px;
+  border-radius: 20px;
+}
+
+.price {
+  color: var(--primary);
+}
+
+.qty {
+  width: 60px;
+  padding: 5px;
+}
+
+/* BUTTON SYSTEM */
+
+.btn {
+    background-color: #efd9dc;
+    color: black;
+    border: 1px solid #e6cdd1;
+
+    height: 48px;
+    padding: 0 28px;
+    border-radius: 16px;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+    text-decoration: none;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.25s ease;
+}
+
+.btn:hover {
+    background-color: #e6cdd1;
+    transform: translateY(-2px);
+}
+
+.cart-actions .btn,
+.summary-actions .btn {
+  height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+
+.btn-large {
+    height: 48px;
+    padding: 0 20px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+
+/* secondary */
+.secondary {
+  background: var(--primary);
+  opacity: 0.7;
+  color: black;
+}
+
+.secondary:hover {
+  background: #efd9dc;
+}
+
+
+/* delete single item */
+.danger {
+    background: #efd9dc;  
+    border: 1px solid #e57373;
+    color: #b00020;
+}
+
+.danger:hover {
+    background: #f8d7da;
+}
+
+/* delete all (Clear Cart) */
+.danger-all {
+    background: #efd9dc;  
+    border: 1px solid #e6cdd1;
+    color: black;
+    opacity: 0.8;
+}
+
+.danger-all:hover {
+    background: #e6cdd1;
+}
+
+/* CART */
+.cart {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cart-item {
+  background: var(--card);
+  padding: 15px;
+  border-radius: 15px;
+}
+
+.cart-item .btn {
+  height: 38px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+
+.cart-item img {
+  width: 120px;
+  border-radius: 10px;
+}
+
+
+.cart-item a {
+  text-decoration: none;
+  display: inline-flex;
+}
+
+/* ACTIONS LAYOUT */
+.cart-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+/* SUMMARY */
+.summary {
+  margin: 20px;
+  padding: 15px;
+  background: var(--card);
+  border-radius: 15px;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  align-items: center;
+}
+
+/* unify buttons in summary */
+.summary-actions .btn,
+.cart-actions .btn {
+  height: 38px;
+}
+
+/* PAGE TEXT */
+.page-title {
+  padding: 20px;
+}
+
+.top-actions {
+  margin: 0 20px;
+}
+
+/* EMPTY CART */
+.empty {
+  padding: 20px;
+}
+
