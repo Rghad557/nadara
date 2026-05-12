@@ -2,6 +2,30 @@
 include 'config.php';
 session_start();
 
+// ================== BUY FUNCTION ==================
+if(isset($_POST['buy'])){
+
+    if(isset($_SESSION['cart']) && !empty($_SESSION['cart'])){
+
+        foreach($_SESSION['cart'] as $item){
+
+            $id = $item['id'];
+            $qty = $item['qty'];
+
+            // تحديث الكمية من الداتابيس
+            mysqli_query($conn, "UPDATE products SET stock = stock - $qty WHERE product_id = $id");
+        }
+
+        // كوكي (آخر عملية شراء)
+        setcookie("last_purchase", "Order completed", time()+3600, "/");
+
+        // تفريغ السلة
+        unset($_SESSION['cart']);
+
+        echo "<script>alert('Order placed successfully!'); window.location='index.php';</script>";
+    }
+}
+
 // delete single item
 if(isset($_GET['delete'])) {
     $index = $_GET['delete'];
@@ -38,7 +62,6 @@ $total = 0;
 
 <!-- HEADER -->
 <div class="navbar">
-
     <div class="logo">
         Nadara
     </div>
@@ -50,7 +73,6 @@ $total = 0;
             <a href="checkout.php">Shopping Cart 🛒</a>
         <?php endif; ?>
     </div>
-
 </div>
 
 <!-- Page Title -->
@@ -121,25 +143,18 @@ $total += $item_total;
             </button>
         </form>
 
-        <button class="btn primary-btn" onclick="buyNow(<?php echo $cart_empty ? 'true' : 'false'; ?>)">
-            Buy Now
-        </button>
+        <!--  زر BUY الحقيقي -->
+        <form method="post">
+            <button name="buy" class="btn primary-btn" <?php echo $cart_empty ? 'disabled' : ''; ?>>
+                Buy Now
+            </button>
+        </form>
 
         <a href="index.php" class="btn secondary">Continue Shopping</a>
 
     </div>
 
 </div>
-
-<script>
-function buyNow(isEmpty){
-    if(isEmpty){
-        alert("Your cart is empty 🛒");
-    } else {
-        alert("Order placed successfully!");
-    }
-}
-</script>
 
 </body>
 </html>
