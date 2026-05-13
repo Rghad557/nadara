@@ -2,23 +2,79 @@
 include 'config.php';
 session_start();
 
+// ================== GET PRODUCT ID ==================
 $id = isset($_GET['id']) ? $_GET['id'] : 1;
 
+// ================== GET PRODUCT DATA ==================
 $sql = "SELECT * FROM products WHERE product_id = $id";
 $result = mysqli_query($conn, $sql);
 $row = mysqli_fetch_assoc($result);
 
-// Add to cart
+// التأكد أن المنتج موجود
+if(!$row){
+    echo "<script>alert('Product not found'); window.location='index.php';</script>";
+    exit();
+}
+
+// ================== ADD TO CART ==================
 if(isset($_POST['add'])) {
+
     $product_id = $_POST['id'];
     $qty = $_POST['qty'];
 
-    $_SESSION['cart'][] = [
-        "id" => $product_id,
-        "qty" => $qty
-    ];
+    // التأكد أن الكمية أكبر من صفر
+    if($qty <= 0){
 
-    echo "<p style='color:black; margin:20px 40px; font-weight:600;'>Added to cart ✅</p>";
+        echo "<script>alert('Quantity must be greater than 0');</script>";
+
+    }
+    // التأكد أن الكمية لا تتجاوز المخزون
+    elseif($qty > $row['stock']){
+
+        echo "<script>alert('Sorry, not enough stock available!');</script>";
+
+    }
+    else {
+
+        $found = false;
+
+        // إذا السلة موجودة، نتحقق هل المنتج مضاف مسبقًا
+        if(isset($_SESSION['cart'])){
+
+            foreach($_SESSION['cart'] as &$item){
+
+                if($item['id'] == $product_id){
+
+                    $new_qty = $item['qty'] + $qty;
+
+                    // التأكد أن الكمية الجديدة لا تتجاوز المخزون
+                    if($new_qty > $row['stock']){
+
+                        echo "<script>alert('Cannot add more than available stock!');</script>";
+
+                    } else {
+
+                        $item['qty'] = $new_qty;
+                        echo "<script>alert('Cart updated successfully');</script>";
+                    }
+
+                    $found = true;
+                    break;
+                }
+            }
+        }
+
+        // إذا المنتج غير موجود بالسلة، نضيفه كمنتج جديد
+        if(!$found){
+
+            $_SESSION['cart'][] = [
+                "id" => $product_id,
+                "qty" => $qty
+            ];
+
+            echo "<script>alert('Added to cart successfully');</script>";
+        }
+    }
 }
 ?>
 
@@ -27,7 +83,9 @@ if(isset($_POST['add'])) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title><?php echo $row['name']; ?></title>
+
 <link rel="stylesheet" href="style.css">
 
 <style>
@@ -113,7 +171,14 @@ body{
 .description{
     font-size:19px;
     line-height:1.7;
-    margin-bottom:28px;
+    margin-bottom:22px;
+}
+
+.stock{
+    margin-bottom:20px;
+    font-size:18px;
+    font-weight:600;
+    color:#444;
 }
 
 .qty-row{
@@ -174,7 +239,7 @@ body{
     transform:translateY(-2px);
 }
 
-/* popup help */
+/* ================== HELP POPUP ================== */
 .popup-overlay{
     display:none;
     position:fixed;
@@ -264,7 +329,7 @@ body{
 
 <body>
 
-<!-- Navbar -->
+<!-- ================== NAVBAR ================== -->
 <div class="navbar">
     <div class="logo">Nadara</div>
 
@@ -277,14 +342,19 @@ body{
 
 <div class="page-wrapper">
 
+<!-- ================== BACK BUTTON ================== -->
 <a href="index.php" class="back-btn">← Back to products</a>
 
 <div class="product-container">
 
-<img src="images/<?php echo $row['image']; ?>" class="product-img" alt="<?php echo $row['name']; ?>">
+<!-- ================== PRODUCT IMAGE ================== -->
+<img src="images/<?php echo $row['image']; ?>" 
+     class="product-img" 
+     alt="<?php echo $row['name']; ?>">
 
 <div class="product-info">
 
+<!-- ================== PRODUCT DETAILS ================== -->
 <h1><?php echo $row['name']; ?></h1>
 
 <h3 class="price">
@@ -295,13 +365,28 @@ body{
     <?php echo $row['description']; ?>
 </p>
 
+<p class="stock">
+    Available Stock: <?php echo $row['stock']; ?>
+</p>
+
+<!-- ================== ADD TO CART FORM ================== -->
 <form method="post" onsubmit="return validateQuantity();">
 
 <input type="hidden" name="id" value="<?php echo $row['product_id']; ?>">
 
 <div class="qty-row">
-    <label>Quantity:</label>
-    <input type="number" id="qty" name="qty" value="1" min="1" class="qty" oninput="updateTotal()">
+    <label for="qty">Quantity:</label>
+
+    <input type="number"
+           id="qty"
+           name="qty"
+           value="1"
+           min="1"
+           max="<?php echo $row['stock']; ?>"
+           class="qty"
+           required
+           oninput="this.setCustomValidity(''); updateTotal();"
+           oninvalid="this.setCustomValidity('Quantity must be between 1 and available stock')">
 </div>
 
 <div class="total-box">
@@ -310,14 +395,17 @@ body{
 
 <div class="btn-group">
 
-<button type="submit" name="add" class="btn" onclick="return confirmAddToCart();">
+<!-- ADD TO CART -->
+<button type="submit" name="add" class="btn">
     Add to Cart
 </button>
 
+<!-- CHECKOUT -->
 <button type="button" class="btn" onclick="goToCheckout()">
     Checkout
 </button>
 
+<!-- HELP BUTTON -->
 <button type="button" class="btn" onclick="openHelp()">
     Help
 </button>
@@ -330,7 +418,7 @@ body{
 </div>
 </div>
 
-<!-- Help Popup -->
+<!-- ================== HELP POPUP ================== -->
 <div id="helpPopup" class="popup-overlay" onclick="closeHelpOutside(event)">
 
 <div class="popup-box">
@@ -345,6 +433,7 @@ Welcome to NADARA help center. This page allows you to view product details and 
 
 <ul>
     <li>Enter a valid quantity greater than 0.</li>
+    <li>Quantity cannot be more than the available stock.</li>
     <li>Click <strong>Add to Cart</strong> to save the product in your shopping cart.</li>
     <li>Click <strong>Checkout</strong> to continue to the order page.</li>
     <li>If you need support, contact us using the information below.</li>
@@ -358,9 +447,12 @@ Welcome to NADARA help center. This page allows you to view product details and 
 </div>
 </div>
 
+<!-- ================== JAVASCRIPT ================== -->
 <script>
 let productPrice = <?php echo $row['price']; ?>;
+let availableStock = <?php echo $row['stock']; ?>;
 
+// VALIDATE QUANTITY
 function validateQuantity(){
     let qty = document.getElementById("qty").value;
 
@@ -374,26 +466,24 @@ function validateQuantity(){
         return false;
     }
 
+    if(parseInt(qty) > availableStock){
+        alert("Sorry, not enough stock available.");
+        return false;
+    }
+
     return true;
 }
 
-function confirmAddToCart(){
-    if(validateQuantity()){
-        alert("Product added to cart successfully!");
-        return true;
-    }
-    return false;
-}
-
+// GO TO CHECKOUT
 function goToCheckout(){
-    if(validateQuantity()){
-        let confirmCheckout = confirm("Do you want to continue to checkout?");
-        if(confirmCheckout){
-            location.href = "checkout.php";
-        }
+    let confirmCheckout = confirm("Do you want to continue to checkout?");
+
+    if(confirmCheckout){
+        location.href = "checkout.php";
     }
 }
 
+// UPDATE TOTAL PRICE
 function updateTotal(){
     let qty = document.getElementById("qty").value;
     let total = document.getElementById("totalPrice");
@@ -401,18 +491,21 @@ function updateTotal(){
     if(qty === "" || qty <= 0){
         total.innerHTML = "0";
     } else {
-        total.innerHTML = productPrice * qty;
+        total.innerHTML = (productPrice * qty).toFixed(2);
     }
 }
 
+// OPEN HELP POPUP
 function openHelp(){
     document.getElementById("helpPopup").style.display="flex";
 }
 
+// CLOSE HELP POPUP
 function closeHelp(){
     document.getElementById("helpPopup").style.display="none";
 }
 
+// CLOSE HELP WHEN CLICKING OUTSIDE
 function closeHelpOutside(event){
     let popupBox = document.querySelector(".popup-box");
 
@@ -421,6 +514,7 @@ function closeHelpOutside(event){
     }
 }
 
+// CLOSE HELP USING ESC KEY
 document.addEventListener("keydown", function(event){
     if(event.key === "Escape"){
         closeHelp();
