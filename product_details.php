@@ -1,25 +1,78 @@
-
 <?php
 include 'config.php';
 session_start();
 
+// ================== GET PRODUCT ID ==================
 $id = isset($_GET['id']) ? $_GET['id'] : 1;
 
+// ================== GET PRODUCT DATA ==================
 $sql = "SELECT * FROM products WHERE product_id = $id";
 $result = mysqli_query($conn, $sql);
 $row = mysqli_fetch_assoc($result);
 
-// Add to cart
+// ================== ADD TO CART ==================
 if(isset($_POST['add'])) {
+
     $product_id = $_POST['id'];
     $qty = $_POST['qty'];
 
-    $_SESSION['cart'][] = [
-        "id" => $product_id,
-        "qty" => $qty
-    ];
+    // ================== VALIDATION ==================
 
-    echo "<p style='color:black; margin:20px 40px; font-weight:600;'>Added to cart ✅</p>";
+    // التأكد أن الكمية أكبر من صفر
+    if($qty <= 0){
+
+        echo "<script>alert('Quantity must be greater than 0');</script>";
+
+    } 
+    // التأكد أن الكمية المطلوبة متوفرة بالمخزون
+    elseif($qty > $row['stock']){
+
+        echo "<script>alert('Sorry, not enough stock available!');</script>";
+
+    } 
+    else {
+
+        // ================== CHECK IF PRODUCT EXISTS IN CART ==================
+        $found = false;
+
+        if(isset($_SESSION['cart'])){
+
+            foreach($_SESSION['cart'] as &$item){
+
+                // إذا المنتج موجود مسبقًا بالسلة
+                if($item['id'] == $product_id){
+
+                    $new_qty = $item['qty'] + $qty;
+
+                    // التأكد أن الكمية الجديدة لا تتجاوز المخزون
+                    if($new_qty > $row['stock']){
+
+                        echo "<script>alert('Cannot add more than available stock!');</script>";
+
+                    } else {
+
+                        $item['qty'] = $new_qty;
+
+                        echo "<script>alert('Cart updated successfully ✅');</script>";
+                    }
+
+                    $found = true;
+                    break;
+                }
+            }
+        }
+
+        // ================== ADD NEW PRODUCT TO CART ==================
+        if(!$found){
+
+            $_SESSION['cart'][] = [
+                "id" => $product_id,
+                "qty" => $qty
+            ];
+
+            echo "<script>alert('Added to cart successfully ✅');</script>";
+        }
+    }
 }
 ?>
 
@@ -28,10 +81,13 @@ if(isset($_POST['add'])) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title><?php echo $row['name']; ?></title>
+
 <link rel="stylesheet" href="style.css">
 
 <style>
+
 :root{
     --primary:#EFD9DC;
     --primary-hover:#e6cdd1;
@@ -112,6 +168,13 @@ body{
     margin-bottom:28px;
 }
 
+.stock{
+    margin-bottom:20px;
+    font-size:18px;
+    font-weight:600;
+    color:#444;
+}
+
 .qty-row{
     display:flex;
     align-items:center;
@@ -158,7 +221,8 @@ body{
     background-color:var(--primary-hover);
 }
 
-/* popup help */
+/* ================== HELP POPUP ================== */
+
 .popup-overlay{
     display:none;
     position:fixed;
@@ -201,7 +265,10 @@ body{
     font-weight:bold;
 }
 
+/* ================== RESPONSIVE ================== */
+
 @media (max-width:900px){
+
     .product-container{
         flex-direction:column;
         align-items:flex-start;
@@ -219,31 +286,47 @@ body{
         width:100%;
     }
 }
+
 </style>
 </head>
 
 <body>
 
-<!-- Navbar -->
+<!-- ================== NAVBAR ================== -->
+
 <div class="navbar">
-    <div class="logo">Nadara</div>
+
+    <div class="logo">
+        Nadara
+    </div>
 
     <div class="nav-links">
         <a href="index.php">Home</a>
         <a href="checkout.php">Shopping Cart 🛒</a>
         <a href="contact.php">Contact Us 📍</a>
     </div>
+
 </div>
 
 <div class="page-wrapper">
 
-<a href="index.php" class="back-btn">← Back to products</a>
+<!-- ================== BACK BUTTON ================== -->
+
+<a href="index.php" class="back-btn">
+    ← Back to products
+</a>
 
 <div class="product-container">
 
-<img src="images/<?php echo $row['image']; ?>" class="product-img" alt="<?php echo $row['name']; ?>">
+<!-- ================== PRODUCT IMAGE ================== -->
+
+<img src="images/<?php echo $row['image']; ?>" 
+     class="product-img" 
+     alt="<?php echo $row['name']; ?>">
 
 <div class="product-info">
+
+<!-- ================== PRODUCT DETAILS ================== -->
 
 <h1><?php echo $row['name']; ?></h1>
 
@@ -255,28 +338,52 @@ body{
     <?php echo $row['description']; ?>
 </p>
 
+<p class="stock">
+    Available Stock: <?php echo $row['stock']; ?>
+</p>
+
+<!-- ================== ADD TO CART FORM ================== -->
+
 <form method="post">
 
-<input type="hidden" name="id" value="<?php echo $row['product_id']; ?>">
+<input type="hidden" 
+       name="id" 
+       value="<?php echo $row['product_id']; ?>">
 
 <div class="qty-row">
+
     <label>Quantity:</label>
-    <input type="number" name="qty" value="1" min="1" class="qty">
+
+    <input type="number"
+           name="qty"
+           value="1"
+           min="1"
+           max="<?php echo $row['stock']; ?>"
+           class="qty"
+           required>
+
 </div>
 
 <div class="btn-group">
 
-<button type="submit" name="add" class="btn">
-    Add to Cart
-</button>
+    <!-- ADD TO CART -->
+    <button type="submit" name="add" class="btn">
+        Add to Cart
+    </button>
 
-<button type="button" class="btn" onclick="location.href='checkout.php'">
-    Checkout
-</button>
+    <!-- CHECKOUT -->
+    <button type="button" 
+            class="btn" 
+            onclick="location.href='checkout.php'">
+        Checkout
+    </button>
 
-<button type="button" class="btn" onclick="openHelp()">
-    Help
-</button>
+    <!-- HELP BUTTON -->
+    <button type="button" 
+            class="btn" 
+            onclick="openHelp()">
+        Help
+    </button>
 
 </div>
 
@@ -286,12 +393,15 @@ body{
 </div>
 </div>
 
-<!-- Help Popup -->
+<!-- ================== HELP POPUP ================== -->
+
 <div id="helpPopup" class="popup-overlay">
 
 <div class="popup-box">
 
-<span class="close-btn" onclick="closeHelp()">&times;</span>
+<span class="close-btn" onclick="closeHelp()">
+    &times;
+</span>
 
 <h2>Need Help?</h2>
 
@@ -301,23 +411,31 @@ Our support team is happy to assist you.
 </p>
 
 <p><strong>Phone:</strong> +966 55 123 4567</p>
+
 <p><strong>Email:</strong> support@nadara.com</p>
 
-<button class="btn" onclick="closeHelp()">Close</button>
+<button class="btn" onclick="closeHelp()">
+    Close
+</button>
 
 </div>
 </div>
+
+<!-- ================== JAVASCRIPT ================== -->
 
 <script>
+
+// OPEN HELP POPUP
 function openHelp(){
-    document.getElementById("helpPopup").style.display="flex";
+    document.getElementById("helpPopup").style.display = "flex";
 }
 
+// CLOSE HELP POPUP
 function closeHelp(){
-    document.getElementById("helpPopup").style.display="none";
+    document.getElementById("helpPopup").style.display = "none";
 }
+
 </script>
 
 </body>
 </html>
-```
