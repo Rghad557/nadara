@@ -2,77 +2,23 @@
 include 'config.php';
 session_start();
 
-// ================== GET PRODUCT ID ==================
 $id = isset($_GET['id']) ? $_GET['id'] : 1;
 
-// ================== GET PRODUCT DATA ==================
 $sql = "SELECT * FROM products WHERE product_id = $id";
 $result = mysqli_query($conn, $sql);
 $row = mysqli_fetch_assoc($result);
 
-// ================== ADD TO CART ==================
+// Add to cart
 if(isset($_POST['add'])) {
-
     $product_id = $_POST['id'];
     $qty = $_POST['qty'];
 
-    // ================== VALIDATION ==================
+    $_SESSION['cart'][] = [
+        "id" => $product_id,
+        "qty" => $qty
+    ];
 
-    // التأكد أن الكمية أكبر من صفر
-    if($qty <= 0){
-
-        echo "<script>alert('Quantity must be greater than 0');</script>";
-
-    } 
-    // التأكد أن الكمية المطلوبة متوفرة بالمخزون
-    elseif($qty > $row['stock']){
-
-        echo "<script>alert('Sorry, not enough stock available!');</script>";
-
-    } 
-    else {
-
-        // ================== CHECK IF PRODUCT EXISTS IN CART ==================
-        $found = false;
-
-        if(isset($_SESSION['cart'])){
-
-            foreach($_SESSION['cart'] as &$item){
-
-                // إذا المنتج موجود مسبقًا بالسلة
-                if($item['id'] == $product_id){
-
-                    $new_qty = $item['qty'] + $qty;
-
-                    // التأكد أن الكمية الجديدة لا تتجاوز المخزون
-                    if($new_qty > $row['stock']){
-
-                        echo "<script>alert('Cannot add more than available stock!');</script>";
-
-                    } else {
-
-                        $item['qty'] = $new_qty;
-
-                        echo "<script>alert('Cart updated successfully ✅');</script>";
-                    }
-
-                    $found = true;
-                    break;
-                }
-            }
-        }
-
-        // ================== ADD NEW PRODUCT TO CART ==================
-        if(!$found){
-
-            $_SESSION['cart'][] = [
-                "id" => $product_id,
-                "qty" => $qty
-            ];
-
-            echo "<script>alert('Added to cart successfully ✅');</script>";
-        }
-    }
+    echo "<p style='color:black; margin:20px 40px; font-weight:600;'>Added to cart ✅</p>";
 }
 ?>
 
@@ -81,13 +27,10 @@ if(isset($_POST['add'])) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title><?php echo $row['name']; ?></title>
-
 <link rel="stylesheet" href="style.css">
 
 <style>
-
 :root{
     --primary:#EFD9DC;
     --primary-hover:#e6cdd1;
@@ -142,6 +85,11 @@ body{
     border-radius:26px;
     object-fit:cover;
     box-shadow:0 10px 30px rgba(0,0,0,0.06);
+    transition:0.3s ease;
+}
+
+.product-img:hover{
+    transform:scale(1.03);
 }
 
 .product-info{
@@ -168,18 +116,11 @@ body{
     margin-bottom:28px;
 }
 
-.stock{
-    margin-bottom:20px;
-    font-size:18px;
-    font-weight:600;
-    color:#444;
-}
-
 .qty-row{
     display:flex;
     align-items:center;
     gap:16px;
-    margin-bottom:28px;
+    margin-bottom:16px;
     font-size:18px;
 }
 
@@ -191,6 +132,17 @@ body{
     border-radius:10px;
     outline:none;
     background:white;
+}
+
+.qty:focus{
+    border-color:#b98f96;
+    box-shadow:0 0 8px rgba(185,143,150,0.35);
+}
+
+.total-box{
+    margin-bottom:28px;
+    font-size:18px;
+    font-weight:600;
 }
 
 .btn-group{
@@ -219,10 +171,10 @@ body{
 
 .btn:hover{
     background-color:var(--primary-hover);
+    transform:translateY(-2px);
 }
 
-/* ================== HELP POPUP ================== */
-
+/* popup help */
 .popup-overlay{
     display:none;
     position:fixed;
@@ -238,22 +190,42 @@ body{
 
 .popup-box{
     background:white;
-    width:420px;
+    width:460px;
     max-width:90%;
-    padding:30px;
-    border-radius:22px;
-    text-align:center;
-    box-shadow:0 10px 30px rgba(0,0,0,0.15);
+    padding:34px;
+    border-radius:26px;
+    text-align:left;
+    box-shadow:0 15px 40px rgba(0,0,0,0.18);
     position:relative;
+    animation:popupMove 0.3s ease;
+}
+
+@keyframes popupMove{
+    from{
+        opacity:0;
+        transform:translateY(-20px) scale(0.95);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
 }
 
 .popup-box h2{
     margin-bottom:15px;
+    text-align:center;
+    font-size:28px;
 }
 
 .popup-box p{
     margin-bottom:12px;
     line-height:1.6;
+    font-size:16px;
+}
+
+.popup-box ul{
+    margin:15px 0 18px 20px;
+    line-height:1.8;
 }
 
 .close-btn{
@@ -265,10 +237,11 @@ body{
     font-weight:bold;
 }
 
-/* ================== RESPONSIVE ================== */
+.close-btn:hover{
+    color:#b98f96;
+}
 
 @media (max-width:900px){
-
     .product-container{
         flex-direction:column;
         align-items:flex-start;
@@ -286,47 +259,31 @@ body{
         width:100%;
     }
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- ================== NAVBAR ================== -->
-
+<!-- Navbar -->
 <div class="navbar">
-
-    <div class="logo">
-        Nadara
-    </div>
+    <div class="logo">Nadara</div>
 
     <div class="nav-links">
         <a href="index.php">Home</a>
         <a href="checkout.php">Shopping Cart 🛒</a>
         <a href="contact.php">Contact Us 📍</a>
     </div>
-
 </div>
 
 <div class="page-wrapper">
 
-<!-- ================== BACK BUTTON ================== -->
-
-<a href="index.php" class="back-btn">
-    ← Back to products
-</a>
+<a href="index.php" class="back-btn">← Back to products</a>
 
 <div class="product-container">
 
-<!-- ================== PRODUCT IMAGE ================== -->
-
-<img src="images/<?php echo $row['image']; ?>" 
-     class="product-img" 
-     alt="<?php echo $row['name']; ?>">
+<img src="images/<?php echo $row['image']; ?>" class="product-img" alt="<?php echo $row['name']; ?>">
 
 <div class="product-info">
-
-<!-- ================== PRODUCT DETAILS ================== -->
 
 <h1><?php echo $row['name']; ?></h1>
 
@@ -338,52 +295,32 @@ body{
     <?php echo $row['description']; ?>
 </p>
 
-<p class="stock">
-    Available Stock: <?php echo $row['stock']; ?>
-</p>
+<form method="post" onsubmit="return validateQuantity();">
 
-<!-- ================== ADD TO CART FORM ================== -->
-
-<form method="post">
-
-<input type="hidden" 
-       name="id" 
-       value="<?php echo $row['product_id']; ?>">
+<input type="hidden" name="id" value="<?php echo $row['product_id']; ?>">
 
 <div class="qty-row">
-
     <label>Quantity:</label>
+    <input type="number" id="qty" name="qty" value="1" min="1" class="qty" oninput="updateTotal()">
+</div>
 
-    <input type="number"
-           name="qty"
-           value="1"
-           min="1"
-           max="<?php echo $row['stock']; ?>"
-           class="qty"
-           required>
-
+<div class="total-box">
+    Total: <span id="totalPrice"><?php echo $row['price']; ?></span> SAR
 </div>
 
 <div class="btn-group">
 
-    <!-- ADD TO CART -->
-    <button type="submit" name="add" class="btn">
-        Add to Cart
-    </button>
+<button type="submit" name="add" class="btn" onclick="return confirmAddToCart();">
+    Add to Cart
+</button>
 
-    <!-- CHECKOUT -->
-    <button type="button" 
-            class="btn" 
-            onclick="location.href='checkout.php'">
-        Checkout
-    </button>
+<button type="button" class="btn" onclick="goToCheckout()">
+    Checkout
+</button>
 
-    <!-- HELP BUTTON -->
-    <button type="button" 
-            class="btn" 
-            onclick="openHelp()">
-        Help
-    </button>
+<button type="button" class="btn" onclick="openHelp()">
+    Help
+</button>
 
 </div>
 
@@ -393,48 +330,102 @@ body{
 </div>
 </div>
 
-<!-- ================== HELP POPUP ================== -->
-
-<div id="helpPopup" class="popup-overlay">
+<!-- Help Popup -->
+<div id="helpPopup" class="popup-overlay" onclick="closeHelpOutside(event)">
 
 <div class="popup-box">
 
-<span class="close-btn" onclick="closeHelp()">
-    &times;
-</span>
+<span class="close-btn" onclick="closeHelp()">&times;</span>
 
 <h2>Need Help?</h2>
 
 <p>
-Need help with your skincare order, payment, or delivery?
-Our support team is happy to assist you.
+Welcome to NADARA help center. This page allows you to view product details and choose the quantity before adding the item to your cart.
 </p>
 
-<p><strong>Phone:</strong> +966 55 123 4567</p>
+<ul>
+    <li>Enter a valid quantity greater than 0.</li>
+    <li>Click <strong>Add to Cart</strong> to save the product in your shopping cart.</li>
+    <li>Click <strong>Checkout</strong> to continue to the order page.</li>
+    <li>If you need support, contact us using the information below.</li>
+</ul>
 
+<p><strong>Phone:</strong> +966 55 123 4567</p>
 <p><strong>Email:</strong> support@nadara.com</p>
 
-<button class="btn" onclick="closeHelp()">
-    Close
-</button>
+<button class="btn" onclick="closeHelp()">Close</button>
 
 </div>
 </div>
-
-<!-- ================== JAVASCRIPT ================== -->
 
 <script>
+let productPrice = <?php echo $row['price']; ?>;
 
-// OPEN HELP POPUP
+function validateQuantity(){
+    let qty = document.getElementById("qty").value;
+
+    if(qty === ""){
+        alert("Please enter a quantity.");
+        return false;
+    }
+
+    if(qty <= 0){
+        alert("Quantity must be greater than 0.");
+        return false;
+    }
+
+    return true;
+}
+
+function confirmAddToCart(){
+    if(validateQuantity()){
+        alert("Product added to cart successfully!");
+        return true;
+    }
+    return false;
+}
+
+function goToCheckout(){
+    if(validateQuantity()){
+        let confirmCheckout = confirm("Do you want to continue to checkout?");
+        if(confirmCheckout){
+            location.href = "checkout.php";
+        }
+    }
+}
+
+function updateTotal(){
+    let qty = document.getElementById("qty").value;
+    let total = document.getElementById("totalPrice");
+
+    if(qty === "" || qty <= 0){
+        total.innerHTML = "0";
+    } else {
+        total.innerHTML = productPrice * qty;
+    }
+}
+
 function openHelp(){
-    document.getElementById("helpPopup").style.display = "flex";
+    document.getElementById("helpPopup").style.display="flex";
 }
 
-// CLOSE HELP POPUP
 function closeHelp(){
-    document.getElementById("helpPopup").style.display = "none";
+    document.getElementById("helpPopup").style.display="none";
 }
 
+function closeHelpOutside(event){
+    let popupBox = document.querySelector(".popup-box");
+
+    if(!popupBox.contains(event.target)){
+        closeHelp();
+    }
+}
+
+document.addEventListener("keydown", function(event){
+    if(event.key === "Escape"){
+        closeHelp();
+    }
+});
 </script>
 
 </body>
