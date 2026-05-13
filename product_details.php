@@ -1,4 +1,3 @@
-
 <?php
 include 'config.php';
 session_start();
@@ -86,6 +85,11 @@ body{
     border-radius:26px;
     object-fit:cover;
     box-shadow:0 10px 30px rgba(0,0,0,0.06);
+    transition:0.3s ease;
+}
+
+.product-img:hover{
+    transform:scale(1.03);
 }
 
 .product-info{
@@ -116,7 +120,7 @@ body{
     display:flex;
     align-items:center;
     gap:16px;
-    margin-bottom:28px;
+    margin-bottom:16px;
     font-size:18px;
 }
 
@@ -128,6 +132,17 @@ body{
     border-radius:10px;
     outline:none;
     background:white;
+}
+
+.qty:focus{
+    border-color:#b98f96;
+    box-shadow:0 0 8px rgba(185,143,150,0.35);
+}
+
+.total-box{
+    margin-bottom:28px;
+    font-size:18px;
+    font-weight:600;
 }
 
 .btn-group{
@@ -156,6 +171,7 @@ body{
 
 .btn:hover{
     background-color:var(--primary-hover);
+    transform:translateY(-2px);
 }
 
 /* popup help */
@@ -174,22 +190,42 @@ body{
 
 .popup-box{
     background:white;
-    width:420px;
+    width:460px;
     max-width:90%;
-    padding:30px;
-    border-radius:22px;
-    text-align:center;
-    box-shadow:0 10px 30px rgba(0,0,0,0.15);
+    padding:34px;
+    border-radius:26px;
+    text-align:left;
+    box-shadow:0 15px 40px rgba(0,0,0,0.18);
     position:relative;
+    animation:popupMove 0.3s ease;
+}
+
+@keyframes popupMove{
+    from{
+        opacity:0;
+        transform:translateY(-20px) scale(0.95);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
 }
 
 .popup-box h2{
     margin-bottom:15px;
+    text-align:center;
+    font-size:28px;
 }
 
 .popup-box p{
     margin-bottom:12px;
     line-height:1.6;
+    font-size:16px;
+}
+
+.popup-box ul{
+    margin:15px 0 18px 20px;
+    line-height:1.8;
 }
 
 .close-btn{
@@ -199,6 +235,10 @@ body{
     font-size:28px;
     cursor:pointer;
     font-weight:bold;
+}
+
+.close-btn:hover{
+    color:#b98f96;
 }
 
 @media (max-width:900px){
@@ -255,22 +295,26 @@ body{
     <?php echo $row['description']; ?>
 </p>
 
-<form method="post">
+<form method="post" onsubmit="return validateQuantity();">
 
 <input type="hidden" name="id" value="<?php echo $row['product_id']; ?>">
 
 <div class="qty-row">
     <label>Quantity:</label>
-    <input type="number" name="qty" value="1" min="1" class="qty">
+    <input type="number" id="qty" name="qty" value="1" min="1" class="qty" oninput="updateTotal()">
+</div>
+
+<div class="total-box">
+    Total: <span id="totalPrice"><?php echo $row['price']; ?></span> SAR
 </div>
 
 <div class="btn-group">
 
-<button type="submit" name="add" class="btn">
+<button type="submit" name="add" class="btn" onclick="return confirmAddToCart();">
     Add to Cart
 </button>
 
-<button type="button" class="btn" onclick="location.href='checkout.php'">
+<button type="button" class="btn" onclick="goToCheckout()">
     Checkout
 </button>
 
@@ -287,7 +331,7 @@ body{
 </div>
 
 <!-- Help Popup -->
-<div id="helpPopup" class="popup-overlay">
+<div id="helpPopup" class="popup-overlay" onclick="closeHelpOutside(event)">
 
 <div class="popup-box">
 
@@ -296,9 +340,15 @@ body{
 <h2>Need Help?</h2>
 
 <p>
-Need help with your skincare order, payment, or delivery?
-Our support team is happy to assist you.
+Welcome to NADARA help center. This page allows you to view product details and choose the quantity before adding the item to your cart.
 </p>
+
+<ul>
+    <li>Enter a valid quantity greater than 0.</li>
+    <li>Click <strong>Add to Cart</strong> to save the product in your shopping cart.</li>
+    <li>Click <strong>Checkout</strong> to continue to the order page.</li>
+    <li>If you need support, contact us using the information below.</li>
+</ul>
 
 <p><strong>Phone:</strong> +966 55 123 4567</p>
 <p><strong>Email:</strong> support@nadara.com</p>
@@ -309,6 +359,52 @@ Our support team is happy to assist you.
 </div>
 
 <script>
+let productPrice = <?php echo $row['price']; ?>;
+
+function validateQuantity(){
+    let qty = document.getElementById("qty").value;
+
+    if(qty === ""){
+        alert("Please enter a quantity.");
+        return false;
+    }
+
+    if(qty <= 0){
+        alert("Quantity must be greater than 0.");
+        return false;
+    }
+
+    return true;
+}
+
+function confirmAddToCart(){
+    if(validateQuantity()){
+        alert("Product added to cart successfully!");
+        return true;
+    }
+    return false;
+}
+
+function goToCheckout(){
+    if(validateQuantity()){
+        let confirmCheckout = confirm("Do you want to continue to checkout?");
+        if(confirmCheckout){
+            location.href = "checkout.php";
+        }
+    }
+}
+
+function updateTotal(){
+    let qty = document.getElementById("qty").value;
+    let total = document.getElementById("totalPrice");
+
+    if(qty === "" || qty <= 0){
+        total.innerHTML = "0";
+    } else {
+        total.innerHTML = productPrice * qty;
+    }
+}
+
 function openHelp(){
     document.getElementById("helpPopup").style.display="flex";
 }
@@ -316,8 +412,21 @@ function openHelp(){
 function closeHelp(){
     document.getElementById("helpPopup").style.display="none";
 }
+
+function closeHelpOutside(event){
+    let popupBox = document.querySelector(".popup-box");
+
+    if(!popupBox.contains(event.target)){
+        closeHelp();
+    }
+}
+
+document.addEventListener("keydown", function(event){
+    if(event.key === "Escape"){
+        closeHelp();
+    }
+});
 </script>
 
 </body>
 </html>
-```
