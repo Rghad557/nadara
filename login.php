@@ -6,19 +6,15 @@ $error_message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = mysqli_real_escape_string($conn, $_POST['admin_email']);
-    $password = mysqli_real_escape_string($conn, $_POST['admin_pass']);
+    $password = $_POST['admin_pass'];
 
-    // Login using admins table only
-    $query = "SELECT * FROM admins 
-              WHERE email = '$email' AND password = '$password' 
-              LIMIT 1";
 
+    $query = "SELECT * FROM admins WHERE email = '$email' AND password = '$password' LIMIT 1";
     $result = mysqli_query($conn, $query);
 
-    if ($result && mysqli_num_rows($result) == 1) {
+    if (mysqli_num_rows($result) == 1) {
         $admin = mysqli_fetch_assoc($result);
         
-        // Remember me cookie
         if (isset($_POST['remember_me'])) {
             setcookie("admin_login", $email, time() + (86400 * 30), "/"); 
         } else {
@@ -27,13 +23,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         }
 
-        // Store admin information in session
         $_SESSION['admin_id'] = $admin['admin_id'];
         $_SESSION['admin_name'] = $admin['full_name'];
         
         header("Location: dashbord.php");
         exit();
-
     } else {
         $error_message = "Invalid email or password!";
     }
@@ -46,25 +40,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NADARA | Admin Login</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style1.css">
-
     <style>
+        
         .login-card {
             max-width: 350px !important; 
-            padding: 30px 25px !important;
+            padding: 30px 25px !important; /
             margin: 20px !important; 
             border-radius: 35px !important;
         }
 
-        .login-card h1 { 
-            font-size: 2rem !important; 
-        }
-
-        .login-card h2 { 
-            font-size: 1.1rem !important; 
-        }
+       
+        .login-card h1 { font-size: 2rem !important; }
+        .login-card h2 { font-size: 1.1rem !important; }
 
         .error-msg {
             background-color: #f8d7da;
@@ -81,7 +70,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             text-align: left;
             margin-bottom: 15px;
         }
-
         .back-link {
             text-decoration: none;
             color: #888;
@@ -91,19 +79,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             gap: 5px;
             transition: 0.3s;
         }
-
         .back-link:hover {
             color: #E8B4B8;
             transform: translateX(-3px);
         }
     </style>
 </head>
-
 <body>
 
     <div class="login-body">
         <div class="login-card">
-
             <div class="back-nav">
                 <a href="index.php" class="back-link">
                     <i class="fas fa-arrow-left"></i> Back to Home
@@ -117,63 +102,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </header>
             
             <?php if ($error_message): ?>
-                <div class="error-msg">
-                    <?php echo $error_message; ?>
-                </div>
+                <div class="error-msg"><?php echo $error_message; ?></div>
             <?php endif; ?>
 
             <form action="login.php" method="POST">
-
                 <div class="input-field">
                     <label style="font-size: 0.85rem;">Email</label>
-                    <input 
-                        type="email" 
-                        name="admin_email" 
-                        placeholder="adminlogin@nadara.com" 
-                        value="<?php echo $_COOKIE['admin_login'] ?? ''; ?>" 
-                        required
-                    >
+                    <input type="email" name="admin_email" placeholder="adminlogin@nadara.com" 
+                           value="<?php echo $_COOKIE['admin_login'] ?? ''; ?>" required>
                 </div>
 
                 <div class="input-field">
                     <label style="font-size: 0.85rem;">Password</label>
-                    <input 
-                        type="password" 
-                        name="admin_pass" 
-                        placeholder="••••••••" 
-                        required
-                    >
+                    <input type="password" name="admin_pass" placeholder="••••••••" required>
                 </div>
 
                 <div class="options" style="font-size: 0.8rem;">
                     <label>
-                        <input 
-                            type="checkbox" 
-                            name="remember_me" 
-                            <?php if(isset($_COOKIE["admin_login"])) echo "checked"; ?>
-                        > 
-                        Remember me
+                        <input type="checkbox" name="remember_me" <?php if(isset($_COOKIE["admin_login"])) echo "checked"; ?>> Remember me
                     </label>
-
-                    <a 
-                        href="javascript:void(0)" 
-                        onclick="alert('System Admin: Please check the database credentials or contact support.');" 
-                        style="color: #E8B4B8; text-decoration: none;"
-                    >
-                        Forgot?
-                    </a>
+                    <a href="javascript:void(0)" onclick="alert('System Admin: Please check the database credentials or contact support.');" style="color: #E8B4B8; text-decoration: none;">Forgot Password?</a>
                 </div>
 
-                <button type="submit" class="btn-login" style="padding: 12px; border-radius: 12px;">
-                    Login
-                </button>
-
+                <button type="submit" class="btn-login" style="padding: 12px; border-radius: 12px;">Login</button>
             </form>
 
             <footer style="margin-top: 25px; font-size: 0.75rem; color: #ccc;">
                 <p>© 2026 NADARA. All rights reserved.</p>
             </footer>
-
         </div>
     </div>
 
