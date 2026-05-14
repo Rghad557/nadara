@@ -7,78 +7,40 @@ if(isset($_POST['buy'])){
 
     if(isset($_SESSION['cart']) && !empty($_SESSION['cart'])){
 
-        $can_buy = true;
-        $total_amount = 0;
-
-        // ================== CHECK STOCK ==================
+        // 1. Check stock before buying
         foreach($_SESSION['cart'] as $item){
 
             $id = $item['id'];
             $qty = $item['qty'];
 
-            // جلب بيانات المنتج من الداتابيس
             $product_query = mysqli_query($conn, "SELECT * FROM products WHERE product_id = $id");
             $product = mysqli_fetch_assoc($product_query);
 
-            // التأكد أن المنتج موجود وأن الكمية متوفرة
             if(!$product || $qty > $product['stock']){
-                $can_buy = false;
                 echo "<script>alert('Not enough stock for this product!'); window.location='checkout.php';</script>";
                 exit();
             }
-
-            // حساب السعر الكلي للطلب
-            $total_amount += $product['price'] * $qty;
         }
 
-        // ================== INSERT ORDER ==================
-        if($can_buy){
+        // 2. Update product stock only
+        foreach($_SESSION['cart'] as $item){
 
-            // حفظ الطلب في جدول orders
-            $customer_name = "Guest Customer";
+            $id = $item['id'];
+            $qty = $item['qty'];
 
-            mysqli_query($conn, "INSERT INTO orders (customer_name, total_amount) 
-                                 VALUES ('$customer_name', $total_amount)");
-
-            // أخذ رقم الطلب الجديد
-            $order_id = mysqli_insert_id($conn);
-
-            // ================== INSERT ORDER ITEMS + UPDATE STOCK ==================
-            foreach($_SESSION['cart'] as $item){
-
-                $id = $item['id'];
-                $qty = $item['qty'];
-
-                // جلب بيانات المنتج مرة ثانية لحفظ السعر
-                $product_query = mysqli_query($conn, "SELECT * FROM products WHERE product_id = $id");
-                $product = mysqli_fetch_assoc($product_query);
-
-                $unit_price = $product['price'];
-                $item_total = $unit_price * $qty;
-
-                // حفظ تفاصيل المنتجات المطلوبة في order_items
-                mysqli_query($conn, "INSERT INTO order_items 
-                                    (order_id, product_id, quantity, unit_price, item_total)
-                                    VALUES
-                                    ($order_id, $id, $qty, $unit_price, $item_total)");
-
-                // تحديث الكمية من الداتابيس
-                mysqli_query($conn, "UPDATE products 
-                                     SET stock = stock - $qty 
-                                     WHERE product_id = $id");
-            }
-
-            // ================== COOKIE LAST PURCHASE ==================
-            // كوكي آخر عملية شراء
-            setcookie("last_purchase", "Order completed", time()+3600, "/");
-
-            // ================== EMPTY CART ==================
-            // تفريغ السلة
-            unset($_SESSION['cart']);
-
-            echo "<script>alert('Order placed successfully!'); window.location='index.php';</script>";
-            exit();
+            mysqli_query($conn, "UPDATE products 
+                                 SET stock = stock - $qty 
+                                 WHERE product_id = $id");
         }
+
+        // 3. Save last purchase cookie
+        setcookie("last_purchase", "Purchase completed", time()+3600, "/");
+
+        // 4. Empty cart
+        unset($_SESSION['cart']);
+
+        echo "<script>alert('Purchase completed successfully!'); window.location='index.php';</script>";
+        exit();
 
     } else {
         echo "<script>alert('Your cart is empty!'); window.location='checkout.php';</script>";
@@ -168,7 +130,6 @@ $total = 0;
 $id = $item['id'];
 $qty = $item['qty'];
 
-// جلب بيانات المنتج من الداتابيس
 $sql = "SELECT * FROM products WHERE product_id = $id";
 $result = mysqli_query($conn, $sql);
 $row = mysqli_fetch_assoc($result);
@@ -196,7 +157,15 @@ $total += $item_total;
     <!-- UPDATE QUANTITY FORM -->
     <form method="post" class="cart-actions">
         <input type="hidden" name="index" value="<?php echo $index; ?>">
-        <input type="number" name="qty" value="<?php echo $qty; ?>" min="1" max="<?php echo $row['stock']; ?>" class="qty" required>
+        <input 
+            type="number" 
+            name="qty" 
+            value="<?php echo $qty; ?>" 
+            min="1" 
+            max="<?php echo $row['stock']; ?>" 
+            class="qty" 
+            required
+        >
         <button type="submit" name="update" class="btn">Update</button>
     </form>
 
@@ -208,7 +177,9 @@ $total += $item_total;
 <?php endforeach; ?>
 
 <?php else: ?>
+
     <p class="empty">Your cart is empty 🛒</p>
+
 <?php endif; ?>
 
 </div>

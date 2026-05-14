@@ -7,6 +7,7 @@ include 'config.php';
 <head>
     <title>Nadara</title>
     <link rel="stylesheet" href="style.css">
+
     <style>
         .admin-btn {
             border: 1px solid #E8B4B8;
@@ -15,6 +16,7 @@ include 'config.php';
             color: #E8B4B8 !important;
             transition: 0.3s;
         }
+
         .admin-btn:hover {
             background-color: #E8B4B8;
             color: white !important;
@@ -28,6 +30,7 @@ include 'config.php';
         }
     </style>
 </head>
+
 <body>
 
 <div class="navbar">
@@ -45,7 +48,7 @@ include 'config.php';
 
 </div>
 
-<!--  عرض الكوكي -->
+<!-- عرض الكوكي -->
 <?php
 if(isset($_COOKIE['last_purchase'])){
     echo "<div class='cookie-msg'>Last purchase: ".$_COOKIE['last_purchase']."</div>";
@@ -57,14 +60,15 @@ if(isset($_COOKIE['last_purchase'])){
     <p class="subtitle">Natural products for your glow</p>
 </section>
 
+<!-- Categories -->
 <div class="categories">
     <button onclick="filterProducts('all')">All</button>
-    <button onclick="filterProducts('1')">Cleanser</button>
-    <button onclick="filterProducts('3')">Serum</button>
-    <button onclick="filterProducts('4')">Cream</button>
-    <button onclick="filterProducts('5')">Sunscreen</button>
-    <button onclick="filterProducts('2')">Toner</button>
-    <button onclick="filterProducts('6')">Mask</button>
+    <button onclick="filterProducts('Cleanser')">Cleanser</button>
+    <button onclick="filterProducts('Serum')">Serum</button>
+    <button onclick="filterProducts('Cream')">Cream</button>
+    <button onclick="filterProducts('Sunscreen')">Sunscreen</button>
+    <button onclick="filterProducts('Toner')">Toner</button>
+    <button onclick="filterProducts('Mask')">Mask</button>
 </div>
 
 <div class="products">
@@ -77,7 +81,7 @@ if ($result) {
     while($row = mysqli_fetch_assoc($result)) {
 ?>
 
-    <div class="card" data-category="<?php echo $row['category_id']; ?>">
+    <div class="card" data-category="<?php echo $row['category']; ?>">
         <a href="product_details.php?id=<?php echo $row['product_id']; ?>">
             <img src="images/<?php echo $row['image']; ?>">
             <h3><?php echo $row['name']; ?></h3>
