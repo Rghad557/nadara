@@ -22,7 +22,7 @@ if(isset($_POST['buy'])){
             }
         }
 
-        // 2. Update product stock only
+        // 2. Update product stock
         foreach($_SESSION['cart'] as $item){
 
             $id = $item['id'];
@@ -33,10 +33,32 @@ if(isset($_POST['buy'])){
                                  WHERE product_id = $id");
         }
 
-        // 3. Save last purchase cookie
-        setcookie("last_purchase", "Purchase completed", time()+3600, "/");
+        // 3. Create invoice cookie (store full cart data)
+        $invoice = [];
 
-        // 4. Empty cart
+        foreach($_SESSION['cart'] as $item){
+
+            $id = $item['id'];
+            $qty = $item['qty'];
+
+            $res = mysqli_query($conn, "SELECT * FROM products WHERE product_id = $id");
+            $row = mysqli_fetch_assoc($res);
+
+            // Store product info for invoice
+            if($row){
+                $invoice[] = [
+                    'name' => $row['name'],
+                    'price' => $row['price'],
+                    'qty' => $qty,
+                    'image' => $row['image']
+                ];
+            }
+        }
+
+        // Save invoice as JSON in cookie
+        setcookie("last_purchase", json_encode($invoice), time()+3600, "/");
+
+        // 4. Empty cart after purchase
         unset($_SESSION['cart']);
 
         echo "<script>alert('Purchase completed successfully!'); window.location='index.php';</script>";
@@ -99,16 +121,12 @@ $total = 0;
 
 <!-- HEADER -->
 <div class="navbar">
-    <div class="logo">
-        Nadara
-    </div>
+    <div class="logo">Nadara</div>
 
     <div class="nav-links">
         <a href="index.php">Home</a>
         <a href="contact.php">Contact Us 📍</a>
-        <?php if(basename($_SERVER['PHP_SELF']) != "checkout.php"): ?>
-            <a href="checkout.php">Shopping Cart 🛒</a>
-        <?php endif; ?>
+        <a href="checkout.php">Shopping Cart 🛒</a>
     </div>
 </div>
 
@@ -140,7 +158,6 @@ if(!$row){
 
 $item_total = $row['price'] * $qty;
 $total += $item_total;
-
 ?>
 
 <div class="cart-item">
@@ -154,22 +171,14 @@ $total += $item_total;
         <p>Total: <?php echo $item_total; ?> SAR</p>
     </div>
 
-    <!-- UPDATE QUANTITY FORM -->
+    <!-- Update quantity -->
     <form method="post" class="cart-actions">
         <input type="hidden" name="index" value="<?php echo $index; ?>">
-        <input 
-            type="number" 
-            name="qty" 
-            value="<?php echo $qty; ?>" 
-            min="1" 
-            max="<?php echo $row['stock']; ?>" 
-            class="qty" 
-            required
-        >
+        <input type="number" name="qty" value="<?php echo $qty; ?>" min="1" max="<?php echo $row['stock']; ?>">
         <button type="submit" name="update" class="btn">Update</button>
     </form>
 
-    <!-- DELETE ITEM -->
+    <!-- Remove item -->
     <a href="checkout.php?delete=<?php echo $index; ?>" class="btn danger">Remove</a>
 
 </div>
@@ -177,9 +186,7 @@ $total += $item_total;
 <?php endforeach; ?>
 
 <?php else: ?>
-
     <p class="empty">Your cart is empty 🛒</p>
-
 <?php endif; ?>
 
 </div>
@@ -191,14 +198,14 @@ $total += $item_total;
 
     <div class="summary-actions">
 
-        <!-- CLEAR CART -->
+        <!-- Clear cart -->
         <form method="post">
             <button type="submit" name="clear" class="btn danger-all" <?php echo $cart_empty ? 'disabled' : ''; ?>>
                 Clear Cart
             </button>
         </form>
 
-        <!-- BUY NOW -->
+        <!-- Buy now -->
         <form method="post">
             <button type="submit" name="buy" class="btn primary-btn" <?php echo $cart_empty ? 'disabled' : ''; ?>>
                 Buy Now
