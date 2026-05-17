@@ -298,3 +298,39 @@ body {
   padding: 20px;
 }
 
+/* INVOICE BOX (Last Purchase) */
+.invoice-box {
+    width: 85%;
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+
+    background: var(--card);
+    border-radius: 20px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+/* each item inside invoice */
+.invoice-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.invoice-item img {
+    width: 70px;
+    border-radius: 12px;
+}
+
+.invoice-item p {
+    margin: 2px 0;
+}
+
+/* total line */
+.invoice-total {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+}
